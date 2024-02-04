@@ -726,7 +726,7 @@ namespace tmd
 {
 
 	__host__ __device__
-	void _query(Result &result, const Node &node, const Vec3d& point,
+	inline void _query(Result &result, const Node &node, const Vec3d& point,
 		Vec3d*               	vertices,				
 		std::array<int, 3>*  	triangles,				
 		Node* 				 	nodes
@@ -789,7 +789,7 @@ namespace tmd
 		* @return Result containing distance, nearest point on the mesh, nearest entity and the nearest triangle index.
 	*/
 	__host__ __device__
-	Result unsigned_distance(const std::array<double, 3>& point,
+	inline Result unsigned_distance(const std::array<double, 3>& point,
 		Vec3d*               	vertices,				
 		std::array<int, 3>*  	triangles,				
 		Node* 				 	nodes
@@ -809,7 +809,7 @@ namespace tmd
 		* @return Result containing distance, nearest point on the mesh, nearest entity and the nearest triangle index.
 	*/
 	__host__ __device__
-	Result signed_distance(const std::array<double, 3>& point,
+	inline Result signed_distance(const std::array<double, 3>& point,
 		Vec3d*               	vertices,				
 		std::array<int, 3>*  	triangles,				
 		Node* 				 	nodes,					
