@@ -41,31 +41,31 @@ namespace tmd
 	public:
 		std::array<FLOAT, 3> v;
 		
-		Vec3r() {};
+		__host__ __device__ Vec3r() {};
 		template<typename FLOAT_I>
-		Vec3r(const FLOAT_I& x, const FLOAT_I& y, const FLOAT_I& z) { v[0] = static_cast<FLOAT>(x); v[1] = static_cast<FLOAT>(y); v[2] = static_cast<FLOAT>(z); }
+		__host__ __device__ Vec3r(const FLOAT_I& x, const FLOAT_I& y, const FLOAT_I& z) { v[0] = static_cast<FLOAT>(x); v[1] = static_cast<FLOAT>(y); v[2] = static_cast<FLOAT>(z); }
 		template<typename SIZE_T>
-		const FLOAT& operator[](const SIZE_T& i) const { return v[i]; }
+		__host__ __device__ const FLOAT& operator[](const SIZE_T& i) const { return v[i]; }
 		template<typename SIZE_T>
-		FLOAT& operator[](const SIZE_T& i) { return v[i]; }
-		FLOAT dot(const Vec3r &u) const { return v[0]*u[0] + v[1]*u[1] + v[2]*u[2]; }
-		Vec3r<FLOAT> cross(const Vec3r &u) const { return Vec3r(v[1]*u[2] - v[2]*u[1], -v[0]*u[2] + v[2]*u[0], v[0]*u[1] - v[1]*u[0]); }
-		Vec3r<FLOAT> operator+(const Vec3r &u) const { return Vec3r(v[0]+u[0], v[1]+u[1], v[2]+u[2]); }
-		Vec3r<FLOAT> operator-(const Vec3r &u) const { return Vec3r(v[0]-u[0], v[1]-u[1], v[2]-u[2]); }
-		void operator+=(const Vec3r& u) { v[0] += u[0]; v[1] += u[1]; v[2] += u[2]; }
+		__host__ __device__ FLOAT& operator[](const SIZE_T& i) { return v[i]; }
+		__host__ __device__ FLOAT dot(const Vec3r &u) const { return v[0]*u[0] + v[1]*u[1] + v[2]*u[2]; }
+		__host__ __device__ Vec3r<FLOAT> cross(const Vec3r &u) const { return Vec3r(v[1]*u[2] - v[2]*u[1], -v[0]*u[2] + v[2]*u[0], v[0]*u[1] - v[1]*u[0]); }
+		__host__ __device__ Vec3r<FLOAT> operator+(const Vec3r &u) const { return Vec3r(v[0]+u[0], v[1]+u[1], v[2]+u[2]); }
+		__host__ __device__ Vec3r<FLOAT> operator-(const Vec3r &u) const { return Vec3r(v[0]-u[0], v[1]-u[1], v[2]-u[2]); }
+		__host__ __device__ void operator+=(const Vec3r& u) { v[0] += u[0]; v[1] += u[1]; v[2] += u[2]; }
 		template<typename FLOAT_I>
-		Vec3r<FLOAT> operator*(const FLOAT_I &a) const { return Vec3r(static_cast<FLOAT>(a)*v[0], static_cast<FLOAT>(a)*v[1], static_cast<FLOAT>(a)*v[2]); }
+		__host__ __device__ Vec3r<FLOAT> operator*(const FLOAT_I &a) const { return Vec3r(static_cast<FLOAT>(a)*v[0], static_cast<FLOAT>(a)*v[1], static_cast<FLOAT>(a)*v[2]); }
 		template<typename FLOAT_I>
-		Vec3r<FLOAT> operator/(const FLOAT_I &a) const { return Vec3r(v[0]/static_cast<FLOAT>(a), v[1]/static_cast<FLOAT>(a), v[2]/static_cast<FLOAT>(a)); }
+		__host__ __device__ Vec3r<FLOAT> operator/(const FLOAT_I &a) const { return Vec3r(v[0]/static_cast<FLOAT>(a), v[1]/static_cast<FLOAT>(a), v[2]/static_cast<FLOAT>(a)); }
 		template<typename FLOAT_I>
-		void operator/=(const FLOAT_I& a) { v[0] /= static_cast<FLOAT>(a); v[1] /= static_cast<FLOAT>(a); v[2] /= static_cast<FLOAT>(a); }
-		FLOAT squaredNorm() const { return this->dot(*this); }
-		FLOAT norm() const { return std::sqrt(this->squaredNorm()); }
-		Vec3r<FLOAT> normalized() const { return (*this) / this->norm(); }
-		void normalize() { const FLOAT norm = this->norm(); v[0] /= norm; v[1] /= norm; v[2] /= norm; }
+		__host__ __device__ void operator/=(const FLOAT_I& a) { v[0] /= static_cast<FLOAT>(a); v[1] /= static_cast<FLOAT>(a); v[2] /= static_cast<FLOAT>(a); }
+		__host__ __device__ FLOAT squaredNorm() const { return this->dot(*this); }
+		__host__ __device__ FLOAT norm() const { return std::sqrt(this->squaredNorm()); }
+		__host__ __device__ Vec3r<FLOAT> normalized() const { return (*this) / this->norm(); }
+		__host__ __device__ void normalize() { const FLOAT norm = this->norm(); v[0] /= norm; v[1] /= norm; v[2] /= norm; }
 	};
 	template<typename FLOAT, typename FLOAT_I>
-	static inline Vec3r<FLOAT> operator*(const FLOAT_I& a, const Vec3r<FLOAT>& v) { return Vec3r<FLOAT>(static_cast<FLOAT>(a) * v[0], static_cast<FLOAT>(a) * v[1], static_cast<FLOAT>(a) * v[2]); }
+	static __host__ __device__ inline Vec3r<FLOAT> operator*(const FLOAT_I& a, const Vec3r<FLOAT>& v) { return Vec3r<FLOAT>(static_cast<FLOAT>(a) * v[0], static_cast<FLOAT>(a) * v[1], static_cast<FLOAT>(a) * v[2]); }
 	using Vec3d = Vec3r<float>;
 	// -----------------------------------
 
@@ -75,7 +75,7 @@ namespace tmd
 	/**
 	 * Computes the squared distance, the nearest entity (vertex, edge or face) and the nearest point from a point to a triangle.
 	 */
-	static double point_triangle_sq_unsigned(NearestEntity& nearest_entity, Vec3d& nearest_point, const Vec3d& point, const Vec3d& v0, const Vec3d& v1, const Vec3d& v2);
+	__host__ __device__ static double point_triangle_sq_unsigned(NearestEntity& nearest_entity, Vec3d& nearest_point, const Vec3d& point, const Vec3d& v0, const Vec3d& v1, const Vec3d& v2);
 	// -----------------------------------
 
 	// Struct that contains the result of a distance query
@@ -462,7 +462,7 @@ namespace tmd
 
 
 
-
+__host__ __device__
 static double tmd::point_triangle_sq_unsigned(NearestEntity& nearest_entity, Vec3d& nearest_point, const Vec3d& point, const Vec3d& v0, const Vec3d& v1, const Vec3d& v2)
 {
 	Vec3d diff = v0 - point;
@@ -720,3 +720,138 @@ static double tmd::point_triangle_sq_unsigned(NearestEntity& nearest_entity, Vec
 	nearest_point = v0 + s * edge0 + t * edge1;
 	return d2;
 }
+
+
+namespace tmd
+{
+
+	__host__ __device__
+	void _query(Result &result, const Node &node, const Vec3d& point,
+		Vec3d*               	vertices,				
+		std::array<int, 3>*  	triangles,				
+		Node* 				 	nodes
+	) {
+
+		// End of recursion
+		if (node.left == -1) {
+			const int triangle_id = node.right;
+			const std::array<int, 3>& triangle = triangles[node.right]; // If left == -1, right is the triangle_id
+			const Vec3d& v0 = vertices[triangle[0]];
+			const Vec3d& v1 = vertices[triangle[1]];
+			const Vec3d& v2 = vertices[triangle[2]];
+
+			Vec3d nearest_point;
+			tmd::NearestEntity nearest_entity;
+			const double distance_sq = tmd::point_triangle_sq_unsigned(nearest_entity, nearest_point, point, v0, v1, v2);
+
+			if (distance_sq < result.distance * result.distance) {
+				result.nearest_point = nearest_point;
+				result.nearest_entity = nearest_entity;
+				result.distance = std::sqrt(distance_sq);
+				result.triangle_id = triangle_id;
+			}
+		}
+
+		// Recursion
+		else {
+			// Find which child bounding volume is closer
+			const double d_left = (point - node.bv_left.center).norm() - node.bv_left.radius;
+			const double d_right = (point - node.bv_right.center).norm() - node.bv_right.radius;
+
+			if (d_left < d_right) {
+
+				// Overlap test
+				if (d_left < result.distance) {
+					_query(result, nodes[node.left], point, vertices, triangles, nodes);
+				}
+
+				if (d_right < result.distance) {
+					_query(result, nodes[node.right], point, vertices, triangles, nodes);
+				}
+			}
+			else {
+				if (d_right < result.distance) {
+					_query(result, nodes[node.right], point, vertices, triangles, nodes);
+				}
+				if (d_left < result.distance) {
+					_query(result, nodes[node.left], point, vertices, triangles, nodes);
+				}
+			}
+		}
+	}
+
+
+	/**
+		* @brief Computes the unsigned distance from a point to the triangle mesh. Thread safe.
+		*
+		* @param point to query from. Typed to `Vec3d` but can be passed as `{x, y, z}`.
+		* 
+		* @return Result containing distance, nearest point on the mesh, nearest entity and the nearest triangle index.
+	*/
+	__host__ __device__
+	Result unsigned_distance(const std::array<double, 3>& point,
+		Vec3d*               	vertices,				
+		std::array<int, 3>*  	triangles,				
+		Node* 				 	nodes
+	) {
+		
+		const Vec3d p(point[0], point[1], point[2]);
+		Result result;
+		result.distance = std::numeric_limits<double>::max();
+		_query(result, nodes[0], p, vertices, triangles, nodes);
+		return result;
+	}
+	/**
+		* @brief Computes the unsigned distance from a point to the triangle mesh. Thread safe.
+		*
+		* @param point to query from. Typed to `Vec3d` but can be passed as `{x, y, z}`.
+		* 
+		* @return Result containing distance, nearest point on the mesh, nearest entity and the nearest triangle index.
+	*/
+	__host__ __device__
+	Result signed_distance(const std::array<double, 3>& point,
+		Vec3d*               	vertices,				
+		std::array<int, 3>*  	triangles,				
+		Node* 				 	nodes,					
+		Vec3d* 				 	pseudonormals_triangles,	
+		std::array<Vec3d, 3>*	pseudonormals_edges,		
+		Vec3d* 				 	pseudonormals_vertices) {
+		const Vec3d p(point[0], point[1], point[2]);
+		Result result = unsigned_distance(point, vertices, triangles, nodes);
+
+		const std::array<int, 3>& triangle = triangles[result.triangle_id];
+		Vec3d pseudonormal;
+		switch (result.nearest_entity)
+		{
+		case tmd::NearestEntity::V0:
+			pseudonormal = pseudonormals_vertices[triangle[0]];
+			break;
+		case tmd::NearestEntity::V1:
+			pseudonormal = pseudonormals_vertices[triangle[1]];
+			break;
+		case tmd::NearestEntity::V2:
+			pseudonormal = pseudonormals_vertices[triangle[2]];
+			break;
+		case tmd::NearestEntity::E01:
+			pseudonormal = pseudonormals_edges[result.triangle_id][0];
+			break;
+		case tmd::NearestEntity::E12:
+			pseudonormal = pseudonormals_edges[result.triangle_id][1];
+			break;
+		case tmd::NearestEntity::E02:
+			pseudonormal = pseudonormals_edges[result.triangle_id][2];
+			break;
+		case tmd::NearestEntity::F:
+			pseudonormal = pseudonormals_triangles[result.triangle_id];
+			break;
+
+		default:
+			break;
+		}
+
+		const Vec3d u = p - result.nearest_point;
+		result.distance *= (u.dot(pseudonormal) >= 0.0) ? 1.0 : -1.0;
+
+		return result;
+	}
+};

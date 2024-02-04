@@ -1,9 +1,9 @@
-#include "TriangleMeshDistance.h"
 #include <cuda_runtime.h>
 #include <iostream>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <vector>
+#include "TriangleMeshDistance.h"
 
 typedef tmd::TriangleMeshDistance<thrust::host_vector, true> HostTBuild;
 typedef tmd::TriangleMeshDistance<thrust::host_vector, false> HostTQuery;
@@ -44,9 +44,26 @@ double point_AABB_signed(const tmd::Vec3d& point, const tmd::Vec3d& bottom, cons
 	}
 }
 
-__global__ void vvv(DeviTQuery & t) {
+__global__ void vvv(
+	tmd::Vec3d*               	vertices,				
+	std::array<int, 3>*  	triangles,				
+	tmd::Node* 				 	nodes,					
+	tmd::Vec3d* 				 	pseudonormals_triangles,	
+	std::array<tmd::Vec3d, 3>*	pseudonormals_edges,		
+	tmd::Vec3d* 				 	pseudonormals_vertices, 
+	float* fooArray) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  // t.signed_distance({1,1,1});
+  
+  auto ret = tmd::signed_distance(
+	{i - 50,0,0},
+	vertices,
+	triangles,
+	nodes,
+	pseudonormals_triangles,
+	pseudonormals_edges,
+	pseudonormals_vertices
+  );
+	fooArray[i] = ret.distance;
 }
 
 int main() {
@@ -81,32 +98,40 @@ int main() {
     DeviTQuery mesh_distance_Device;
     
     mesh_distance_Device.vertices                = mesh_distance.vertices; 
-		mesh_distance_Device.triangles               = mesh_distance.triangles; 
-		mesh_distance_Device.nodes                   = mesh_distance.nodes; 
-		mesh_distance_Device.pseudonormals_triangles = mesh_distance.pseudonormals_triangles; 
-		mesh_distance_Device.pseudonormals_edges     = mesh_distance.pseudonormals_edges; 
-		mesh_distance_Device.pseudonormals_vertices  = mesh_distance.pseudonormals_vertices; 
-		mesh_distance_Device.root_bv                 = mesh_distance.root_bv;
-		mesh_distance_Device.is_constructed          = mesh_distance.is_constructed; 
+	mesh_distance_Device.triangles               = mesh_distance.triangles; 
+	mesh_distance_Device.nodes                   = mesh_distance.nodes; 
+	mesh_distance_Device.pseudonormals_triangles = mesh_distance.pseudonormals_triangles; 
+	mesh_distance_Device.pseudonormals_edges     = mesh_distance.pseudonormals_edges; 
+	mesh_distance_Device.pseudonormals_vertices  = mesh_distance.pseudonormals_vertices; 
+	mesh_distance_Device.root_bv                 = mesh_distance.root_bv;
+	mesh_distance_Device.is_constructed          = mesh_distance.is_constructed; 
 
     mesh_distance_.vertices                = mesh_distance.vertices; 
-		mesh_distance_.triangles               = mesh_distance.triangles; 
-		mesh_distance_.nodes                   = mesh_distance.nodes; 
-		mesh_distance_.pseudonormals_triangles = mesh_distance.pseudonormals_triangles; 
-		mesh_distance_.pseudonormals_edges     = mesh_distance.pseudonormals_edges; 
-		mesh_distance_.pseudonormals_vertices  = mesh_distance.pseudonormals_vertices; 
-		mesh_distance_.root_bv                 = mesh_distance.root_bv;
-		mesh_distance_.is_constructed          = mesh_distance.is_constructed; 
+	mesh_distance_.triangles               = mesh_distance.triangles; 
+	mesh_distance_.nodes                   = mesh_distance.nodes; 
+	mesh_distance_.pseudonormals_triangles = mesh_distance.pseudonormals_triangles; 
+	mesh_distance_.pseudonormals_edges     = mesh_distance.pseudonormals_edges; 
+	mesh_distance_.pseudonormals_vertices  = mesh_distance.pseudonormals_vertices; 
+	mesh_distance_.root_bv                 = mesh_distance.root_bv;
+	mesh_distance_.is_constructed          = mesh_distance.is_constructed; 
 
 
-    for (float x = -2; x < 2; x += 0.13) {
-			for (float y = -2; y < 2; y += 0.13) {
-				for (float z = -2; z < 2; z += 0.13) {
-					const auto result = mesh_distance_.signed_distance({ x, y, z });
-					const float exact = point_AABB_signed({ x, y, z }, { -1, -1, -1 }, { 1, 1, 1 });
-					std::cout << (std::abs(result.distance - exact) < 1e-5) << std::endl;
-				}
-			}
-		}
-    vvv<<<dim3(10, 1, 1), dim3(10, 1, 1)>>>(mesh_distance_Device);
+    for (int x = 0; x < 100; x += 1) {
+		const auto result = mesh_distance_.signed_distance({ x - 50, 0, 0 });
+		const float exact = point_AABB_signed({ x - 50, 0, 0 }, { -1, -1, -1 }, { 1, 1, 1 });
+		std::cout << result.distance << " " << (std::abs(result.distance - exact) < 1e-5) << std::endl;
+	}
+	
+	thrust::device_vector<float> outdist(100);
+	  float* fooArray = thrust::raw_pointer_cast( outdist.data() );
+    vvv<<<dim3(10, 1, 1), dim3(10, 1, 1)>>>(
+		thrust::raw_pointer_cast(mesh_distance_Device.vertices.data()),				
+		thrust::raw_pointer_cast(mesh_distance_Device.triangles.data()),				
+		thrust::raw_pointer_cast(mesh_distance_Device.nodes.data()),					
+		thrust::raw_pointer_cast(mesh_distance_Device.pseudonormals_triangles.data()),	
+		thrust::raw_pointer_cast(mesh_distance_Device.pseudonormals_edges.data()),		
+		thrust::raw_pointer_cast(mesh_distance_Device.pseudonormals_vertices.data()), 
+		fooArray);
+	  safe_cuda(cudaDeviceSynchronize());
+thrust::copy_n(outdist.begin(), outdist.size(), std::ostream_iterator<float>(std::cout, ","));
 }

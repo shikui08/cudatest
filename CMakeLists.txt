@@ -8,6 +8,7 @@ include_directories(cudatest /usr/local/cuda-12.1/include/)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 target_compile_options(cudatest PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
                        -std=c++20
+                       --expt-relaxed-constexpr
                        >)
 set_target_properties(cudatest PROPERTIES 
     CUDA_SEPARABLE_COMPILATION ON
