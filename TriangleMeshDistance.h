@@ -801,6 +801,81 @@ namespace tmd
 		_query(result, nodes[0], p, vertices, triangles, nodes);
 		return result;
 	}
+
+	__host__ __device__
+	inline Result unsigned_distance_non_recursive(const std::array<double, 3>& point_,
+		Vec3d*               	vertices,				
+		std::array<int, 3>*  	triangles,				
+		Node* 				 	nodes
+	) {
+		// printf("%lld unsign LL %d RR %d\n", nodes + 0, (nodes + 0)->left, (nodes + 0)->right);
+		
+		const Vec3d point(point_[0], point_[1], point_[2]);
+		Result result;
+		result.distance = std::numeric_limits<float>::max();
+
+		Node* stk[256] = {0};
+		int stkptr = 0;
+		stk[stkptr++] = nodes + 0;
+		while(stkptr != 0) {
+			Node* node = stk[--stkptr];
+			// printf("%lld        sizeof(Node) %lld                LL %d RR %d \n", node, sizeof(Node), node->left, node->right);
+			// printf("%lld sizeof(Node) unsign %d LL %d RR %d\n", nodes + 0, sizeof(Node), (nodes + 0)->left, (nodes + 0)->right);
+			// printf("%lld                        LL %d RR %d\n", node,             node->left,        node->right);
+			// printf("%lld LL %d RR %d\n", nodes + 0, (nodes + 0)->left, (nodes + 0)->right);
+			
+			// End of recursion
+			if (node->left == -1) {
+				const int triangle_id = node->right;
+				const std::array<int, 3>& triangle = triangles[node->right]; // If left == -1, right is the triangle_id
+				const Vec3d& v0 = vertices[triangle[0]];
+				const Vec3d& v1 = vertices[triangle[1]];
+				const Vec3d& v2 = vertices[triangle[2]];
+
+				Vec3d nearest_point;
+				tmd::NearestEntity nearest_entity;
+				const double distance_sq = tmd::point_triangle_sq_unsigned(nearest_entity, nearest_point, point, v0, v1, v2);
+
+				if (distance_sq < result.distance * result.distance) {
+					result.nearest_point = nearest_point;
+					result.nearest_entity = nearest_entity;
+					result.distance = std::sqrt(distance_sq);
+					result.triangle_id = triangle_id;
+				}
+			}
+
+			// Recursion
+			else {
+				// Find which child bounding volume is closer
+				const double d_left = (point - node->bv_left.center).norm() - node->bv_left.radius;
+				const double d_right = (point - node->bv_right.center).norm() - node->bv_right.radius;
+
+				if (d_left < d_right) {
+					if (d_right < result.distance) {
+						stk[stkptr++] = nodes + node->right;
+					}
+					// Overlap test
+					if (d_left < result.distance) {
+						stk[stkptr++] = nodes + node->left;
+					}
+
+
+				}
+				else {
+					if (d_left < result.distance) {
+						stk[stkptr++] = nodes + node->left;
+					}
+					if (d_right < result.distance) {
+						stk[stkptr++] = nodes + node->right;
+					}
+
+				}
+			}
+		}
+
+		return result;
+	}
+
 	/**
 		* @brief Computes the unsigned distance from a point to the triangle mesh. Thread safe.
 		*
@@ -817,7 +892,7 @@ namespace tmd
 		std::array<Vec3d, 3>*	pseudonormals_edges,		
 		Vec3d* 				 	pseudonormals_vertices) {
 		const Vec3d p(point[0], point[1], point[2]);
-		Result result = unsigned_distance(point, vertices, triangles, nodes);
+		Result result = unsigned_distance_non_recursive(point, vertices, triangles, nodes);
 
 		const std::array<int, 3>& triangle = triangles[result.triangle_id];
 		Vec3d pseudonormal;
